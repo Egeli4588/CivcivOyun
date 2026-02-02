@@ -18,6 +18,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _jumpForce;
     [SerializeField] private bool _canJump;
     [SerializeField] private float _jumpCoolDown;
+
+    [Header("Ground Settings")]
+   
+    [SerializeField] private float _playerHeight;
+    [SerializeField] private LayerMask _groundLayer;
     private void Awake()
     {
         _playerRigidBody = GetComponent<Rigidbody>();
@@ -25,7 +30,7 @@ public class PlayerController : MonoBehaviour
     }
     private void Start()
     {
-        _canJump = true;
+        //_canJump = true;
     }
     private void Update()
     {
@@ -47,12 +52,12 @@ public class PlayerController : MonoBehaviour
     {
         _horizontalInput = Input.GetAxisRaw("Horizontal");
         _verticalInput = Input.GetAxisRaw("Vertical");
-        if (Input.GetKey(_jumpKey) && _canJump)
+        if (Input.GetKey(_jumpKey) && _canJump && isGrounded())
         {
             //zýplama iþlemi gerçekleþecek
             _canJump = false;
             SetPlayerJumping();
-            Invoke(nameof(JumpingReset),_jumpCoolDown);
+            Invoke(nameof(ResetJumping),_jumpCoolDown);
         }
     }
 
@@ -61,8 +66,13 @@ public class PlayerController : MonoBehaviour
         _playerRigidBody.linearVelocity = new Vector3(_playerRigidBody.linearVelocity.x, 0f, _playerRigidBody.linearVelocity.z);
         _playerRigidBody.AddForce(transform.up * _jumpForce, ForceMode.Impulse);
     }
-    private void JumpingReset()
+    private void ResetJumping()
     {
         _canJump = true;
+    }
+
+    private  bool isGrounded() 
+    {
+        return Physics.Raycast(transform.position,Vector3.down,_playerHeight*0.5f+0.2f,_groundLayer);
     }
 }

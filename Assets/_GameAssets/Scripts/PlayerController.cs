@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float _movementSpeed;
 
+    [SerializeField] private KeyCode _movementKey;
+
     private Rigidbody _playerRigidBody;
     private float _verticalInput, _horizontalInput;
     private Vector3 _movementDirection;
@@ -20,9 +22,18 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _jumpCoolDown;
 
     [Header("Ground Settings")]
-   
+
     [SerializeField] private float _playerHeight;
     [SerializeField] private LayerMask _groundLayer;
+    [SerializeField] private float _groundDrag;
+
+    [Header("Slide Settings")]
+
+    [SerializeField] private KeyCode _slideKey;
+    [SerializeField] private float _slideMultiplier;
+    [SerializeField] private float _slideDrag;
+    private bool _isSliding;
+
     private void Awake()
     {
         _playerRigidBody = GetComponent<Rigidbody>();
@@ -35,16 +46,27 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         SetInputs();
+        SetPlayerDrag();
+        LimitPlayerSpeed();
     }
     private void FixedUpdate()
     {
         SetPlayerMovement();
     }
 
+
     private void SetPlayerMovement()
     {
         _movementDirection = _orientationTransform.forward * _verticalInput + _orientationTransform.right * _horizontalInput;
-        _playerRigidBody.AddForce(_movementDirection.normalized * _movementSpeed, ForceMode.Force);
+        if (_isSliding)
+        {
+            _playerRigidBody.AddForce(_movementDirection.normalized * _movementSpeed * _slideMultiplier, ForceMode.Force);
+        }
+        else
+        {
+            _playerRigidBody.AddForce(_movementDirection.normalized * _movementSpeed, ForceMode.Force);
+        }
+
 
     }
 
@@ -52,15 +74,50 @@ public class PlayerController : MonoBehaviour
     {
         _horizontalInput = Input.GetAxisRaw("Horizontal");
         _verticalInput = Input.GetAxisRaw("Vertical");
-        if (Input.GetKey(_jumpKey) && _canJump && isGrounded())
+
+        if (Input.GetKey(_slideKey))
+        {
+            _isSliding = true;
+            Debug.Log("karakterimiz kayýyor");
+        }
+        else if (Input.GetKeyDown(_movementKey))
+        {
+            _isSliding = false;
+            Debug.Log("karakterimiz kendi hýzýnda gidiyor");
+        }
+
+        else if (Input.GetKey(_jumpKey) && _canJump && isGrounded())
         {
             //zýplama iþlemi gerçekleþecek
             _canJump = false;
             SetPlayerJumping();
-            Invoke(nameof(ResetJumping),_jumpCoolDown);
+            Invoke(nameof(ResetJumping), _jumpCoolDown);
         }
     }
+    private void SetPlayerDrag()
+    {
+        if (_isSliding)
+        {
+            _playerRigidBody.linearDamping = _slideDrag;
+        }
+        else
+        {
+            _playerRigidBody.linearDamping = _groundDrag;
+        }
 
+    }
+
+    private void LimitPlayerSpeed()
+    {
+        Vector3 flatVelocity= new Vector3(_playerRigidBody.linearVelocity.x, 0f, _playerRigidBody.linearVelocity.z);
+        if (flatVelocity.magnitude>_movementSpeed)
+        {
+            Vector3 limitedVelocity = flatVelocity.normalized * _movementSpeed;
+            _playerRigidBody.linearVelocity = new Vector3(limitedVelocity.x,_playerRigidBody.linearVelocity.y,limitedVelocity.z);
+
+        }
+
+    }
     private void SetPlayerJumping()
     {
         _playerRigidBody.linearVelocity = new Vector3(_playerRigidBody.linearVelocity.x, 0f, _playerRigidBody.linearVelocity.z);
@@ -71,8 +128,8 @@ public class PlayerController : MonoBehaviour
         _canJump = true;
     }
 
-    private  bool isGrounded() 
+    private bool isGrounded()
     {
-        return Physics.Raycast(transform.position,Vector3.down,_playerHeight*0.5f+0.2f,_groundLayer);
+        return Physics.Raycast(transform.position, Vector3.down, _playerHeight * 0.5f + 0.2f, _groundLayer);
     }
 }

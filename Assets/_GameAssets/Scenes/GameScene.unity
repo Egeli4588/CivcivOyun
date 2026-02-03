@@ -219,6 +219,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _orientationTransform: {fileID: 1046598339}
   _movementSpeed: 30
+  _movementKey: 101
   _jumpKey: 32
   _jumpForce: 8
   _canJump: 1
@@ -227,6 +228,10 @@ MonoBehaviour:
   _groundLayer:
     serializedVersion: 2
     m_Bits: 64
+  _groundDrag: 5
+  _slideKey: 113
+  _slideMultiplier: 2
+  _slideDrag: 2
 --- !u!1 &116952994
 GameObject:
   m_ObjectHideFlags: 0

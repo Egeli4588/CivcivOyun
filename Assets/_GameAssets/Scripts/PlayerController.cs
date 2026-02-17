@@ -16,6 +16,7 @@ public class PlayerController : MonoBehaviour
 
     private StateController _stateController;
     private Rigidbody _playerRigidBody;
+    private float _startingMovement, _startingJumpForce;
     private float _verticalInput, _horizontalInput;
     private Vector3 _movementDirection;
 
@@ -40,11 +41,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _slideDrag;
     private bool _isSliding;
 
+
+
     private void Awake()
     {
         _playerRigidBody = GetComponent<Rigidbody>();
         _playerRigidBody.freezeRotation = true;
         _stateController = GetComponent<StateController>();
+        _startingMovement = _movementSpeed;
+        _startingJumpForce = _jumpForce;
     }
     private void Start()
     {
@@ -71,8 +76,8 @@ public class PlayerController : MonoBehaviour
         {
             PlayerState.Move => 1f,
             PlayerState.Slide => _slideMultiplier,
-            PlayerState.Jump=> _airMultiplier,
-            _ =>1f
+            PlayerState.Jump => _airMultiplier,
+            _ => 1f
         };
         _playerRigidBody.AddForce(_movementDirection.normalized * _movementSpeed * forceMultiplier, ForceMode.Force);
 
@@ -104,25 +109,25 @@ public class PlayerController : MonoBehaviour
     }
     private void SetPlayerDrag()
     {
-        _playerRigidBody.linearDamping = _stateController.GetCurrentState() switch 
+        _playerRigidBody.linearDamping = _stateController.GetCurrentState() switch
         {
-        PlayerState.Move => _groundDrag,
-        PlayerState.Slide =>_slideDrag,
-        PlayerState.Jump => _airDrag,
-        _ => _playerRigidBody.linearDamping
-        
-        
+            PlayerState.Move => _groundDrag,
+            PlayerState.Slide => _slideDrag,
+            PlayerState.Jump => _airDrag,
+            _ => _playerRigidBody.linearDamping
+
+
         };
 
     }
 
     private void LimitPlayerSpeed()
     {
-        Vector3 flatVelocity= new Vector3(_playerRigidBody.linearVelocity.x, 0f, _playerRigidBody.linearVelocity.z);
-        if (flatVelocity.magnitude>_movementSpeed)
+        Vector3 flatVelocity = new Vector3(_playerRigidBody.linearVelocity.x, 0f, _playerRigidBody.linearVelocity.z);
+        if (flatVelocity.magnitude > _movementSpeed)
         {
             Vector3 limitedVelocity = flatVelocity.normalized * _movementSpeed;
-            _playerRigidBody.linearVelocity = new Vector3(limitedVelocity.x,_playerRigidBody.linearVelocity.y,limitedVelocity.z);
+            _playerRigidBody.linearVelocity = new Vector3(limitedVelocity.x, _playerRigidBody.linearVelocity.y, limitedVelocity.z);
 
         }
 
@@ -138,12 +143,13 @@ public class PlayerController : MonoBehaviour
         _canJump = true;
     }
 
+    #region Helpers Function
     private bool IsGrounded()
     {
         return Physics.Raycast(transform.position, Vector3.down, _playerHeight * 0.5f + 0.2f, _groundLayer);
     }
 
-    private void SetStates() 
+    private void SetStates()
     {
         var movementDirection = GetMovementDirection();
         var isGrounded = IsGrounded();
@@ -165,7 +171,7 @@ public class PlayerController : MonoBehaviour
 
         };
 
-        if (newState !=currentState)
+        if (newState != currentState)
         {
             _stateController.ChangeState(newState);
         }
@@ -174,14 +180,38 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    private Vector3 GetMovementDirection() 
+    private Vector3 GetMovementDirection()
     {
         return _movementDirection.normalized;
-    
+
     }
 
-    private bool IsSliding() 
+    private bool IsSliding()
     {
         return _isSliding;
     }
+
+    public void SetMovementSpeed(float speed, float duration)
+    {
+        _movementSpeed += speed;
+        Invoke(nameof(ResetMovementSpeed), duration);
+    }
+    private void ResetMovementSpeed()
+    {
+        _movementSpeed = _startingMovement;
+    }
+
+    public void SetJumpForce(float force, float duration)
+    {
+        _jumpForce += force;
+        Invoke(nameof(ResetJumpForce), duration);
+    }
+    private void ResetJumpForce()
+    {
+        _jumpForce = _startingJumpForce;
+    }
+
+
+
+    #endregion
 }

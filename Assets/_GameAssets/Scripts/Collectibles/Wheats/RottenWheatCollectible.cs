@@ -4,7 +4,7 @@ public class RottenWheatCollectible : MonoBehaviour,ICollectible
 {
   
         [SerializeField] private PlayerController _playerController;
-    [SerializeField] private WheatDesignSO _wheatDesignSO;
+        [SerializeField] private WheatDesignSO _wheatDesignSO;
 
         public void Collect()
         {
